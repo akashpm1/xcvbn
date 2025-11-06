@@ -3,31 +3,12 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 
 const FAQ = [
-  {
-    question: "How can I donate food?",
-    answer:
-      "🍽️ You can donate food by filling out the donation form and selecting an NGO near you. Our system will connect you directly with the NGO!",
-  },
-  {
-    question: "How do I register my NGO?",
-    answer:
-      "🏢 Click the 'Register NGO' button in the navbar and provide your NGO details including name, contact, and location.",
-  },
-  {
-    question: "What types of donations are accepted?",
-    answer:
-      "🥫 We accept cooked meals, packaged food, and non-perishable items like grains, canned food, and snacks.",
-  },
-  {
-    question: "Can I donate anonymously?",
-    answer:
-      "🤫 Yes! You can choose not to provide your personal details in the donation form. Your donation will still reach those in need.",
-  },
-  {
-    question: "How is the donation delivered?",
-    answer:
-      "🚚 Once you submit your donation, the selected NGO will contact you to arrange pickup or delivery.",
-  },
+  { question: "How can I donate food?", answer: "🍽️ You can donate food by filling out the donation form and selecting an NGO near you. Our system will connect you directly with the NGO!" },
+  { question: "How do I register my NGO?", answer: "🏢 Click the 'Register NGO' button in the navbar and provide your NGO details including name, contact, and location." },
+  { question: "What types of donations are accepted?", answer: "🥫 We accept cooked meals, packaged food, and non-perishable items like grains, canned food, and snacks." },
+  { question: "Can I donate anonymously?", answer: "🤫 Yes! You can choose not to provide your personal details in the donation form. Your donation will still reach those in need." },
+  { question: "How is the donation delivered?", answer: "🚚 Once you submit your donation, the selected NGO will contact you to arrange pickup or delivery." },
+  { question: "who is anush?", answer: "ragigudda don" },
 ];
 
 export default function Chatbot() {
@@ -44,6 +25,18 @@ export default function Chatbot() {
 
   useEffect(scrollToBottom, [messages, typing]);
 
+  // 🎙️ Speak text using browser's speech synthesis
+  const speakText = (text) => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel(); // stop previous speech
+      const utterance = new SpeechSynthesisUtterance(text.replace(/[\u{1F600}-\u{1F64F}]/gu, "")); // remove emojis
+      utterance.lang = "en-US";
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   const sendMessage = (text, sender = "user") => {
     if (!text.trim()) return;
     setMessages((prev) => [...prev, { text, sender }]);
@@ -58,16 +51,14 @@ export default function Chatbot() {
 
       setTimeout(() => {
         setTyping(false);
-        setMessages((prev) => [
-          ...prev,
-          {
-            text: matched
-              ? matched.answer
-              : "❓ Sorry, I don't have an answer for that. Please select one of the questions below.",
-            sender: "bot",
-          },
-        ]);
-      }, 800); // simulate bot typing
+        const botResponse = matched
+          ? matched.answer
+          : "❓ Sorry, I don't have an answer for that. Please select one of the questions below.";
+
+        // 💬 Add bot message
+        setMessages((prev) => [...prev, { text: botResponse, sender: "bot" }]);
+        speakText(botResponse); // 🔊 Speak the bot's reply
+      }, 800);
     }
   };
 
@@ -84,12 +75,9 @@ export default function Chatbot() {
               msg.sender === "bot" ? "self-start" : "self-end flex-row-reverse"
             }`}
           >
-            {/* Avatar */}
             <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">
               {msg.sender === "bot" ? "🤖" : "🙋"}
             </div>
-
-            {/* Bubble */}
             <div
               className={`p-3 rounded-lg ${
                 msg.sender === "bot"
@@ -110,7 +98,6 @@ export default function Chatbot() {
             <div className="p-2 bg-green-100 text-green-900 rounded-lg">Typing...</div>
           </div>
         )}
-
         <div ref={messagesEndRef} />
       </div>
 
